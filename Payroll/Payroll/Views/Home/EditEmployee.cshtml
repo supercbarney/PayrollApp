@@ -1,0 +1,202 @@
+﻿@model Payroll.Models.Employee
+@{
+    ViewBag.Title = "CreateEmployee";
+}
+
+<h2>Create Employee</h2>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-2 right">
+            First Name:
+        </div>
+        <div class="col-md-4">
+            <input type="text" data-bind="value: FirstName" class="form-control" id="firstNameField" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-md-offset-2 right">
+            Last Name:
+        </div>
+        <div class="col-md-4">
+            <input type="text" data-bind="value: LastName" class="form-control" id="lastNameField" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-md-offset-2 right">
+            Gross Annual Salary:
+        </div>
+        <div class="col-md-4">
+            <span data-bind="text:formatCurrency(GrossAnnualPay())" class="form-control" disabled="disabled" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-md-offset-2 right">
+            Net Annual Salary:
+        </div>
+        <div class="col-md-4">
+            <span data-bind="text:formatCurrency(NetAnnualPay())" class="form-control" disabled="disabled" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-md-offset-2 right">
+            Gross Bi-Weekly Pay:
+        </div>
+        <div class="col-md-4">
+            <span data-bind="text:formatCurrency(GrossBiWeeklyPay())" class="form-control" disabled="disabled" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-md-offset-2 right">
+            Net Bi-Weekly Pay:
+        </div>
+        <div class="col-md-4">
+            <span data-bind="text:formatCurrency(NetBiWeeklyPay())" class="form-control" disabled="disabled" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-md-offset-2 right">
+            Yearly Insurance Cost:
+        </div>
+        <div class="col-md-4">
+            <span data-bind="text:formatCurrency(YearlyInsuranceCost())" class="form-control" disabled="disabled" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2 col-md-offset-5">
+            <button class="btn-primary" id="saveEmployee">Save</button>
+        </div>
+    </div>
+</div>
+<br />
+<div class="panel panel-default">
+    <div class="panel-heading">Dependants</div>
+    <div class="panel-body">
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <td>First Name</td>
+                    <td>Last Name</td>
+                    <td>Yearly Insurance Cost</td>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach:Dependants">
+                <tr>
+                    <td data-bind="text:FirstName"></td>
+                    <td data-bind="text:LastName"></td>
+                    <td data-bind="text:YearlyInsuranceCost"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="button" class="btn-primary btn-sm" data-toggle="modal" data-target="#dependantModal">Add Dependant</button>
+    </div>
+</div>
+
+<div class="modal" id="dependantModal" tabindex="-1" role="dialog" aria-labelledby="dependantModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="dependantModalLabel">Add Dependant</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-4 col-sm-offset-2 right">
+                        First Name:
+                    </div>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" id="newDependantFirst" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4 col-md-offset-2 right">
+                        Last Name:
+                    </div>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" id="newDependantLast" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="saveDependant">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        koModel.setAllFields(@Html.Raw(Json.Encode(Model)));
+    });
+
+    function formatCurrency(value) {
+        return "$" + value;
+    }
+
+    var employeeModel = function () {
+        var self = this;
+        self.Id = ko.observable();
+        self.FirstName = ko.observable();
+        self.LastName = ko.observable();
+        self.GrossAnnualPay = ko.observable();
+        self.NetAnnualPay = ko.observable();
+        self.GrossBiWeeklyPay = ko.observable();
+        self.NetBiWeeklyPay = ko.observable();
+        self.Dependants = ko.observableArray();
+        self.YearlyInsuranceCost = ko.observable();
+
+        self.setAllFields = function (emp) {
+            self.Id(emp.Id);
+            self.FirstName(emp.FirstName);
+            self.LastName(emp.LastName);
+            self.GrossAnnualPay(emp.GrossAnnualPay);
+            self.NetAnnualPay(emp.NetAnnualPay);
+            self.GrossBiWeeklyPay(emp.GrossBiWeeklyPay);
+            self.NetBiWeeklyPay(emp.NetBiWeeklyPay);
+            self.YearlyInsuranceCost(emp.YearlyInsuranceCost);
+            self.Dependants(emp.Dependants);
+        }
+    }
+
+    $(function () {
+        var emp = $.connection.employeeHub;
+
+        $.connection.hub.start().done(function () {
+            $("#saveEmployee").click(function () {
+                if (koModel.FirstName() == null){
+                    $("#firstNameField").addClass("alert-danger")
+                }
+                if (koModel.LastName() == null) {
+                    $("#lastNameField").addClass("alert-danger")
+                }
+                if(koModel.FirstName()!=null&&koModel.LastName()!=null){
+                    emp.server.addOrUpdateEmployee(ko.toJSON(koModel),$.connection.hub.id);
+                }
+            });
+
+            $("#saveDependant").click(function () {
+                var firstName = $("#newDependantFirst");
+                var lastName = $("#newDependantLast");
+                if(firstName.val()==""){
+                    firstName.addClass("alert-danger");
+                }
+                if(lastName.val()==""){
+                    lastName.addClass("alert-danger");
+                }
+                if(firstName.val()!=""&&lastName.val()!=""&&koModel.FirstName!=null&&koModel.LastName!=null){
+                    emp.server.saveDependant(ko.toJSON(koModel), firstName.val(), lastName.val(), $.connection.hub.id);
+                    firstName.val("");
+                    lastName.val("");
+                }
+
+            })
+        });
+
+        emp.client.addOrUpdateEmployee = function (emp) {
+            koModel.setAllFields(emp);
+        };
+    });
+
+    var koModel = new employeeModel();
+    ko.applyBindings(koModel);
+</script>
